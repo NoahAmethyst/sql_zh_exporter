@@ -1,0 +1,5 @@
+server:
+  port: 9237
+
+log:
+  level: DEBUG

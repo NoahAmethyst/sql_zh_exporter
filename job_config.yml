@@ -1,0 +1,45 @@
+---
+jobs:
+  #  - 达梦
+  - name: "dm"
+    interval: '5s'
+    connections:
+      - 'dm://DTC_PLATFORM_CLOUD:dtc_platform_2020!@10.3.7.231:5236'
+    queries:
+      - name: "qps"
+        help: "DM QPS"
+        labels:
+          - "qps"
+        values:
+          - "stat_val"
+        query: |
+          select stat_val from v$sysstat where name = 'select statements';
+      - name: "table_space_vacancy"
+        help: "DM table space vacancy"
+        labels:
+          - "TABLESPACE_NAME"
+        values:
+          - "VACANCY"
+        query: |
+          SELECT
+          A.TABLESPACE_NAME,
+          (100-ROUND((B.FREE / A.TOTAL * 100), 3)) AS VACANCY
+          FROM
+          (
+          SELECT
+          TABLESPACE_NAME,
+          SUM(BYTES)/ 1024 / 1024 AS TOTAL
+          FROM
+          DBA_DATA_FILES
+          GROUP BY
+          TABLESPACE_NAME) A,
+          (
+          SELECT
+          TABLESPACE_NAME,
+          SUM(BYTES)/ 1024 / 1024 AS FREE
+          FROM
+          DBA_FREE_SPACE
+          GROUP BY
+          TABLESPACE_NAME) B
+          WHERE
+          A.TABLESPACE_NAME = B.TABLESPACE_NAME;
