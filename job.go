@@ -14,7 +14,7 @@ import (
 	//人大金仓数据库驱动
 	_ "github.com/team-ide/go-driver/db_kingbase_v8r6"
 	//神通数据库驱动
-	_ "github.com/team-ide/go-driver/db_shentong"
+	//_ "github.com/team-ide/go-driver/db_shentong"
 	"net/url"
 	"regexp"
 	"strings"
