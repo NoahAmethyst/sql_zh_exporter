@@ -6,6 +6,7 @@ jobs:
     connections:
       - 'dm://DTC_PLATFORM_CLOUD:dtc_platform_2020!@10.3.7.231:5236'
     queries:
+      # 数据库qps
       - name: "qps"
         help: "DM QPS"
         labels:
@@ -14,6 +15,7 @@ jobs:
           - "stat_val"
         query: |
           select stat_val from v$sysstat where name = 'select statements';
+      # 表空间使用率 %
       - name: "table_space_vacancy"
         help: "DM table space vacancy"
         labels:
@@ -22,6 +24,7 @@ jobs:
           - "VACANCY"
         query: |
           SELECT A.TABLESPACE_NAME, (100-ROUND((B.FREE / A.TOTAL * 100), 3)) AS VACANCY FROM ( SELECT TABLESPACE_NAME, SUM(BYTES)/ 1024 / 1024 AS TOTAL FROM DBA_DATA_FILES GROUP BY TABLESPACE_NAME) A, ( SELECT TABLESPACE_NAME, SUM(BYTES)/ 1024 / 1024 AS FREE FROM DBA_FREE_SPACE GROUP BY TABLESPACE_NAME) B WHERE A.TABLESPACE_NAME = B.TABLESPACE_NAME;
+      # 数据库tps
       - name: "tps"
         help: "DM TPS"
         labels:
@@ -30,7 +33,7 @@ jobs:
           - "stat_val"
         query: |
           select stat_val from v$sysstat where name = 'transaction total count';
-
+      # 集群延迟时间 ms
       - name: "cluster_delay_time"
         help: "DM cluster delay time"
         labels:
@@ -39,6 +42,7 @@ jobs:
           - "timediff"
         query: |
           select TIMESTAMPDIFF(SQL_TSI_SECOND,APPLY_CMT_TIME,LAST_CMT_TIME) timediff from v$rapply_stat;
+      # 最大连接数
       - name: "mx_connection"
         help: "DM max connection"
         labels:
@@ -47,6 +51,7 @@ jobs:
           - "para_value"
         query: |
           select para_value from v$dm_ini where para_name = 'MAX_SESSIONS';
+      # 锁数量
       - name: "total_lock"
         help: "DM total lock number"
         labels:
@@ -55,6 +60,7 @@ jobs:
           - "count"
         query: |
           SELECT COUNT(*) count FROM V$LOCK;
+      # 死锁数量
       - name: "dead_lock"
         help: "DM total dead lock number"
         labels:
@@ -63,6 +69,7 @@ jobs:
           - "DEADLOCKNUM"
         query: |
           SELECT COUNT(*) DEADLOCKNUM FROM V$LOCK WHERE BLOCKED=1;
+      #   事务数量
       - name: "transaction_number"
         help: "DM transaction number"
         labels:
@@ -71,6 +78,7 @@ jobs:
           - "TRXNUM"
         query: |
           SELECT COUNT(*) TRXNUM FROM V$TRXWAIT;
+      # 线程数
       - name: "total_thread"
         help: "DM total thread number"
         labels:
@@ -79,7 +87,81 @@ jobs:
           - "THREADSNUM"
         query: |
           SELECT COUNT(*) THREADSNUM FROM V$THREADS;
+      # 表空间总大小
+      - name: "table_total_space"
+        help: "DM table total space"
+        labels:
+          - "TABLESPACE_NAME"
+        values:
+          - "TOTAL_SIZE"
+        query: |
+          SELECT F.TABLESPACE_NAME, T.TOTAL_SPACE AS TOTAL_SIZE FROM (SELECT TABLESPACE_NAME, ROUND(SUM(BLOCKS * (SELECT PARA_VALUE / 1024 FROM V$DM_INI WHERE PARA_NAME = 'GLOBAL_PAGE_SIZE') / 1024)) FREE_SPACE FROM DBA_FREE_SPACE GROUP BY TABLESPACE_NAME) F, (SELECT TABLESPACE_NAME, ROUND(SUM(BYTES / 1048576)) TOTAL_SPACE FROM DBA_DATA_FILES GROUP BY TABLESPACE_NAME) T WHERE F.TABLESPACE_NAME = T.TABLESPACE_NAME
+      # 表空间空闲大小
+      - name: "table_free_space"
+        help: "DM table free space"
+        labels:
+          - "TABLESPACE_NAME"
+        values:
+          - "FREE_SIZE"
+        query: |
+          SELECT F.TABLESPACE_NAME, F.FREE_SPACE AS FREE_SIZE FROM (SELECT TABLESPACE_NAME, ROUND(SUM(BLOCKS * (SELECT PARA_VALUE / 1024 FROM V$DM_INI WHERE PARA_NAME = 'GLOBAL_PAGE_SIZE') / 1024)) FREE_SPACE FROM DBA_FREE_SPACE GROUP BY TABLESPACE_NAME) F, (SELECT TABLESPACE_NAME, ROUND(SUM(BYTES / 1048576)) TOTAL_SPACE FROM DBA_DATA_FILES GROUP BY TABLESPACE_NAME) T WHERE F.TABLESPACE_NAME = T.TABLESPACE_NAME;
+      # 数据库会话数
+      - name: "session_count"
+        help: "DM session count"
+        labels:
+          - "session_count"
+        values:
+          - "COUNT"
+        query: |
+          SELECT COUNT(SESS_ID) AS COUNT FROM V$SESSIONS WHERE STATE IN ('IDLE', 'ACTIVE');
+      # 数据库空闲会话数
+      - name: "free_session_count"
+        help: "DM free session count"
+        labels:
+          - "free_session_count"
+        values:
+          - "COUNT"
+        query: |
+          SELECT COUNT(SESS_ID) AS COUNT FROM V$SESSIONS WHERE STATE = 'IDLE';
+      # 数据库活跃会话数
+      - name: "active_session_count"
+        help: "DM active session count"
+        labels:
+          - "active_session_count"
+        values:
+          - "COUNT"
+        query: |
+          SELECT COUNT(SESS_ID) AS COUNT FROM V$SESSIONS WHERE STATE = 'ACTIVE';
+      # 慢执行数量（大于2s）
+      - name: "slow_sql_num"
+        help: "DM slow sql number"
+        labels:
+          - "slow_sql_num"
+        values:
+          - "NUM"
+        query: |
+          SELECT COUNT(*) NUM FROM ( SELECT SESS_ID, SQL_TEXT, DATEDIFF(SS, LAST_RECV_TIME, SYSDATE) Y_EXETIME, SF_GET_SESSION_SQL(SESS_ID) FULLSQL, CLNT_IP FROM V$SESSIONS WHERE STATE = 'ACTIVE' ) WHERE Y_EXETIME >= 2;
+      # 内存池总量（MB）
+      - name: "zone_total_space"
+        help: "DM zone total space"
+        labels:
+          - "ZONE_TYPE"
+        values:
+          - "TOTAL_VAL"
+        query: |
+          SELECT ZONE_TYPE,TOTAL_VAL FROM ( SELECT 'HJ ZONE' AS ZONE_TYPE, ( SELECT SUM(STAT_VAL) FROM V$SYSSTAT WHERE ID IN (114, 115)) AS CURR_VAL, ( SELECT STAT_VAL FROM V$SYSSTAT WHERE ID IN (145)) AS RES_VAL, ( SELECT STAT_VAL FROM V$SYSSTAT WHERE ID IN (144)) AS TOTAL_VAL FROM DUAL UNION ALL SELECT 'HAGR ZONE', ( SELECT SUM(STAT_VAL) FROM V$SYSSTAT WHERE ID IN (116)),( SELECT STAT_VAL FROM V$SYSSTAT WHERE ID IN (143)),( SELECT STAT_VAL FROM V$SYSSTAT WHERE ID IN (142)) FROM DUAL UNION ALL SELECT 'SORT ZONE', ( SELECT SUM(STAT_VAL) FROM V$SYSSTAT WHERE ID IN (178)), NULL, ( SELECT STAT_VAL FROM V$SYSSTAT WHERE ID IN (177)) FROM DUAL);
+      # 内存池已使用量（MB）
+      - name: "zone_used_space"
+        help: "DM zone used space"
+        labels:
+          - "ZONE_TYPE"
+        values:
+          - "CURR_VAL"
+        query: |
+          SELECT ZONE_TYPE,CURR_VAL FROM ( SELECT 'HJ ZONE' AS ZONE_TYPE, ( SELECT SUM(STAT_VAL) FROM V$SYSSTAT WHERE ID IN (114, 115)) AS CURR_VAL, ( SELECT STAT_VAL FROM V$SYSSTAT WHERE ID IN (145)) AS RES_VAL, ( SELECT STAT_VAL FROM V$SYSSTAT WHERE ID IN (144)) AS TOTAL_VAL FROM DUAL UNION ALL SELECT 'HAGR ZONE', ( SELECT SUM(STAT_VAL) FROM V$SYSSTAT WHERE ID IN (116)),( SELECT STAT_VAL FROM V$SYSSTAT WHERE ID IN (143)),( SELECT STAT_VAL FROM V$SYSSTAT WHERE ID IN (142)) FROM DUAL UNION ALL SELECT 'SORT ZONE', ( SELECT SUM(STAT_VAL) FROM V$SYSSTAT WHERE ID IN (178)), NULL, ( SELECT STAT_VAL FROM V$SYSSTAT WHERE ID IN (177)) FROM DUAL);
           
+    
+
 
 
           
