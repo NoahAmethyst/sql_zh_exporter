@@ -21,25 +21,65 @@ jobs:
         values:
           - "VACANCY"
         query: |
-          SELECT
-          A.TABLESPACE_NAME,
-          (100-ROUND((B.FREE / A.TOTAL * 100), 3)) AS VACANCY
-          FROM
-          (
-          SELECT
-          TABLESPACE_NAME,
-          SUM(BYTES)/ 1024 / 1024 AS TOTAL
-          FROM
-          DBA_DATA_FILES
-          GROUP BY
-          TABLESPACE_NAME) A,
-          (
-          SELECT
-          TABLESPACE_NAME,
-          SUM(BYTES)/ 1024 / 1024 AS FREE
-          FROM
-          DBA_FREE_SPACE
-          GROUP BY
-          TABLESPACE_NAME) B
-          WHERE
-          A.TABLESPACE_NAME = B.TABLESPACE_NAME;
+          SELECT A.TABLESPACE_NAME, (100-ROUND((B.FREE / A.TOTAL * 100), 3)) AS VACANCY FROM ( SELECT TABLESPACE_NAME, SUM(BYTES)/ 1024 / 1024 AS TOTAL FROM DBA_DATA_FILES GROUP BY TABLESPACE_NAME) A, ( SELECT TABLESPACE_NAME, SUM(BYTES)/ 1024 / 1024 AS FREE FROM DBA_FREE_SPACE GROUP BY TABLESPACE_NAME) B WHERE A.TABLESPACE_NAME = B.TABLESPACE_NAME;
+      - name: "tps"
+        help: "DM TPS"
+        labels:
+          - "tps"
+        values:
+          - "stat_val"
+        query: |
+          select stat_val from v$sysstat where name = 'transaction total count';
+
+      - name: "cluster_delay_time"
+        help: "DM cluster delay time"
+        labels:
+          - "cluster_delay_time"
+        values:
+          - "timediff"
+        query: |
+          select TIMESTAMPDIFF(SQL_TSI_SECOND,APPLY_CMT_TIME,LAST_CMT_TIME) timediff from v$rapply_stat;
+      - name: "mx_connection"
+        help: "DM max connection"
+        labels:
+          - "max_conn"
+        values:
+          - "para_value"
+        query: |
+          select para_value from v$dm_ini where para_name = 'MAX_SESSIONS';
+      - name: "total_lock"
+        help: "DM total lock number"
+        labels:
+          - "total_lock"
+        values:
+          - "count"
+        query: |
+          SELECT COUNT(*) count FROM V$LOCK;
+      - name: "dead_lock"
+        help: "DM total dead lock number"
+        labels:
+          - "dead_lock"
+        values:
+          - "DEADLOCKNUM"
+        query: |
+          SELECT COUNT(*) DEADLOCKNUM FROM V$LOCK WHERE BLOCKED=1;
+      - name: "transaction_number"
+        help: "DM transaction number"
+        labels:
+          - "transaction_number"
+        values:
+          - "TRXNUM"
+        query: |
+          SELECT COUNT(*) TRXNUM FROM V$TRXWAIT;
+      - name: "total_thread"
+        help: "DM total thread number"
+        labels:
+          - "total_thread"
+        values:
+          - "THREADSNUM"
+        query: |
+          SELECT COUNT(*) THREADSNUM FROM V$THREADS;
+          
+
+
+          
