@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -16,13 +17,23 @@ func init() {
 }
 
 func main() {
+
+	var (
+		configFile    = flag.String("config.file", "./config.yml", "SQL Exporter config file")
+		jobConfigFile = flag.String("job.config.file", "./job_config.yml", "SQL Exporter job config file")
+	)
+
+	flag.Parse()
+
+	log.Init(*configFile)
+
 	log.Info().Fields(map[string]interface{}{
 		"message":       "Starting sql_exporter",
 		"version_info":  version.Info(),
 		"build_context": version.BuildContext(),
 	}).Send()
 
-	exporter, err := NewExporter()
+	exporter, err := NewExporter(*jobConfigFile)
 	if err != nil {
 		log.Panic().Fields(map[string]interface{}{
 			"action": "starting exporter",
@@ -48,10 +59,10 @@ func main() {
 
 	log.Info().Fields(map[string]interface{}{
 		"action":        "start server",
-		"listenAddress": config.GetConfig(ServerPort),
+		"listenAddress": config.GetConfig(ServerPort, *configFile),
 	}).Send()
 
-	if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%s", config.GetConfig(ServerPort)), nil); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%s", config.GetConfig(ServerPort, *configFile)), nil); err != nil {
 		log.Error().Fields(map[string]interface{}{
 			"action": "starting HTTP server",
 			"error":  err,

@@ -13,9 +13,7 @@ type Exporter struct {
 }
 
 // NewExporter returns a new SQL Exporter for the provided config.
-func NewExporter() (*Exporter, error) {
-
-	configFile := "job_config.yml"
+func NewExporter(configFile string) (*Exporter, error) {
 
 	// read config
 	cfg, err := Read(configFile)

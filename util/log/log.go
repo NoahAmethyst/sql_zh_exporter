@@ -24,11 +24,15 @@ const (
 	levelError = "ERROR"
 )
 
-func init() {
+var console string
+
+func Init(confileFile string) {
+
+	console = config.GetConfig(logWrite, confileFile)
 
 	zerolog.TimeFieldFormat = time.RFC3339Nano
 	var level zerolog.Level
-	switch config.GetConfig(logLevel) {
+	switch config.GetConfig(logLevel, confileFile) {
 	case levelDebug:
 		level = zerolog.DebugLevel
 	case levelWarn:
@@ -40,14 +44,14 @@ func init() {
 	}
 	zerolog.SetGlobalLevel(level)
 
-	switch config.GetConfig(logWrite) {
+	switch config.GetConfig(logWrite, confileFile) {
 	default:
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
 	}
 }
 
 func useConsoleWrite() bool {
-	return strings.EqualFold("CONSOLE", config.GetConfig(logWrite))
+	return strings.EqualFold("CONSOLE", console)
 }
 
 func Panic() *zerolog.Event {

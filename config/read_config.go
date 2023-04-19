@@ -13,12 +13,12 @@ type configCache struct {
 	sync.RWMutex
 }
 
-func GetConfig(key string) string {
+func GetConfig(key, fileName string) string {
 	// set path of yaml
 	if len(cache.get(key)) > 0 {
 		return cache.get(key)
 	}
-	viper.SetConfigFile("config.yml")
+	viper.SetConfigFile(fileName)
 	viper.AddConfigPath(".")
 	viper.AutomaticEnv()
 	if err := viper.ReadInConfig(); err != nil {
