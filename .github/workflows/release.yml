@@ -50,10 +50,19 @@ jobs:
         uses: actions/upload-artifact@v3
         if: ${{ !github.head_ref }}
         with:
-          name: |
-            ${{ matrix.goos }}_${{ matrix.goarch }}
-            config.yml
-            job_config.yml
+          name: ${{ matrix.goos }}_${{ matrix.goarch }}
+          path: output/
+      - name: Upload config file
+        uses: actions/upload-artifact@v3
+        if: ${{ !github.head_ref }}
+        with:
+          name: config.yml
+          path: output/
+      - name: Upload job config file
+        uses: actions/upload-artifact@v3
+        if: ${{ !github.head_ref }}
+        with:
+          name: job_config.yml
           path: output/
 
   goreleaser:
