@@ -51,7 +51,10 @@ jobs:
         if: ${{ !github.head_ref }}
         with:
           name: ${{ matrix.goos }}_${{ matrix.goarch }}
-          path: output/
+          path: |
+            output/
+            config.yml
+            job_config.yml
 
   goreleaser:
     runs-on: ubuntu-latest
