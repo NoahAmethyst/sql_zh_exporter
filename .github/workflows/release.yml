@@ -2,59 +2,71 @@
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
 name: Go create executable file
 on:
-  release:
-    types: [ created ]
+  push:
+    tags:
+      - 'v*'
+env:
+  BINARY_PREFIX: "sql-zh-exporter_"
+  BINARY_SUFFIX: ""
+  COMMIT_ID: "${{ github.sha }}"
+  PR_PROMPT: "::warning:: Build artifact will not be uploaded due to the workflow is trigged by pull request."
 
 jobs:
   build:
+    name: Build binary CI
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        # build and publish in parallel: linux/386, linux/amd64, windows/386, windows/amd64, darwin/amd64, darwin/arm64
+        goos: [ linux, windows, darwin ]
+        goarch: [ "386", amd64, arm, arm64 ]
+        exclude:
+          - goos: darwin
+            goarch: arm
+          - goos: darwin
+            goarch: "386"
+      fail-fast: true
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - name: Setup Go environment
+        uses: actions/setup-go@v3
+        with:
+          cache: true
+          go-version: '1.19'
+      - name: Build binary file
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          IS_PR: ${{ !!github.head_ref }}
+        run: |
+          if [ $GOOS = "windows" ]; then export BINARY_SUFFIX="$BINARY_SUFFIX.exe"; fi
+          if $IS_PR ; then echo $PR_PROMPT; fi
+          export BINARY_NAME="$BINARY_PREFIX"$GOOS"_$GOARCH$BINARY_SUFFIX"
+          export CGO_ENABLED=0
+          go build -o "output/$BINARY_NAME"  .
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        if: ${{ !github.head_ref }}
+        with:
+          name: ${{ matrix.goos }}_${{ matrix.goarch }}
+          path: output/
 
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        run: |
+          git version
+          git clone https://github.com/NoahAmethyst/sql_zh_exporter.git /home/runner/work/sql_zh_exporter/sql_zh_exporter
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: 1.19
+          go-version: '1.19'
 
-      - name: Build for all platforms
-        run: |
-          mkdir -p release
-          GOOS=linux GOARCH=amd64 go build -o release/sql-zh-exporter-linux-amd64
-          GOOS=darwin GOARCH=amd64 go build -o release/sql-zh-exporter-darwin-amd64
-          GOOS=windows GOARCH=amd64 go build -o release/sql-zh-exporter-windows-amd64.exe
-
-      - name: Move config file to release folder
-        run: |
-          mkdir -p release
-          mv config.yml release/
-          mv job_config.yml release/
-#      - name: Create Release
-#        id: create_release
-#        uses: actions/create-release@v1.0.0
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        with:
-#          tag_name: ${{ github.ref }}
-#          release_name: Release ${{ github.ref }}
-#          draft: false
-#          prerelease: false
-
-      - name: Upload Linux Binary
-        uses: actions/upload-artifact@v2
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v4
         with:
-          name: sql-zh-exporter-linux-amd64
-          path: release/sql-zh-exporter-linux-amd64
-
-      - name: Upload macOS Binary
-        uses: actions/upload-artifact@v2
-        with:
-          name: sql-zh-exporter-darwin-amd64
-          path: release/sql-zh-exporter-darwin-amd64
-
-      - name: Upload Windows Binary
-        uses: actions/upload-artifact@v2
-        with:
-          name: sql-zh-exporter-windows-amd64
-          path: release/sql-zh-exporter-windows-amd64.exe
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
