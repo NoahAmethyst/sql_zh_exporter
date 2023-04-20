@@ -44,25 +44,13 @@ jobs:
           export BINARY_NAME="$BINARY_PREFIX"$GOOS"_$GOARCH$BINARY_SUFFIX"
           export CGO_ENABLED=0
           go build -o "output/$BINARY_NAME"  .
-          cp config.yml output/config.yml
-          cp job_config.yml output/job_config.yml
+          cp config.yml output/
+          cp job_config.yml output/
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         if: ${{ !github.head_ref }}
         with:
           name: ${{ matrix.goos }}_${{ matrix.goarch }}
-          path: output/
-      - name: Upload config file
-        uses: actions/upload-artifact@v3
-        if: ${{ !github.head_ref }}
-        with:
-          name: config.yml
-          path: output/
-      - name: Upload job config file
-        uses: actions/upload-artifact@v3
-        if: ${{ !github.head_ref }}
-        with:
-          name: job_config.yml
           path: output/
 
   goreleaser:
