@@ -50,11 +50,11 @@ jobs:
         uses: actions/upload-artifact@v3
         if: ${{ !github.head_ref }}
         with:
-          name: ${{ matrix.goos }}_${{ matrix.goarch }}
-          path: |
-            output/
+          name: |
+            ${{ matrix.goos }}_${{ matrix.goarch }}
             config.yml
             job_config.yml
+          path: output/
 
   goreleaser:
     runs-on: ubuntu-latest
