@@ -67,6 +67,14 @@ jobs:
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v4
+        archives:
+          files:
+          - LICENSE*
+          - README_{{.Os}}.md
+          - CHANGELOG.md
+          # add specific file
+          - config.yml
+          - job_config.yml
         with:
           version: latest
           args: release --clean
