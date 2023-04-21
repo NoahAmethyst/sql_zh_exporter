@@ -12,46 +12,46 @@ env:
   PR_PROMPT: "::warning:: Build artifact will not be uploaded due to the workflow is trigged by pull request."
 
 jobs:
-#  build:
-#    name: Build binary CI
-#    runs-on: ubuntu-latest
-#    strategy:
-#      matrix:
-#        # build and publish in parallel: linux/386, linux/amd64, windows/386, windows/amd64, darwin/amd64, darwin/arm64
-#        goos: [ linux, windows, darwin ]
-#        goarch: [ "386", amd64, arm, arm64 ]
-#        exclude:
-#          - goos: darwin
-#            goarch: arm
-#          - goos: darwin
-#            goarch: "386"
-#      fail-fast: true
-#    steps:
-#      - uses: actions/checkout@v3
-#      - name: Setup Go environment
-#        uses: actions/setup-go@v3
-#        with:
-#          cache: true
-#          go-version: '1.19'
-#      - name: Build binary file
-#        env:
-#          GOOS: ${{ matrix.goos }}
-#          GOARCH: ${{ matrix.goarch }}
-#          IS_PR: ${{ !!github.head_ref }}
-#        run: |
-#          if [ $GOOS = "windows" ]; then export BINARY_SUFFIX="$BINARY_SUFFIX.exe"; fi
-#          if $IS_PR ; then echo $PR_PROMPT; fi
-#          export BINARY_NAME="$BINARY_PREFIX"$GOOS"_$GOARCH$BINARY_SUFFIX"
-#          export CGO_ENABLED=0
-#          go build -o "dist/$BINARY_NAME"  .
-#          cp config.yml dist/
-#          cp job_config.yml dist/
-#      - name: Upload artifact
-#        uses: actions/upload-artifact@v3
-#        if: ${{ !github.head_ref }}
-#        with:
-#          name: ${{ matrix.goos }}_${{ matrix.goarch }}
-#          path: dist/
+  #  build:
+  #    name: Build binary CI
+  #    runs-on: ubuntu-latest
+  #    strategy:
+  #      matrix:
+  #        # build and publish in parallel: linux/386, linux/amd64, windows/386, windows/amd64, darwin/amd64, darwin/arm64
+  #        goos: [ linux, windows, darwin ]
+  #        goarch: [ "386", amd64, arm, arm64 ]
+  #        exclude:
+  #          - goos: darwin
+  #            goarch: arm
+  #          - goos: darwin
+  #            goarch: "386"
+  #      fail-fast: true
+  #    steps:
+  #      - uses: actions/checkout@v3
+  #      - name: Setup Go environment
+  #        uses: actions/setup-go@v3
+  #        with:
+  #          cache: true
+  #          go-version: '1.19'
+  #      - name: Build binary file
+  #        env:
+  #          GOOS: ${{ matrix.goos }}
+  #          GOARCH: ${{ matrix.goarch }}
+  #          IS_PR: ${{ !!github.head_ref }}
+  #        run: |
+  #          if [ $GOOS = "windows" ]; then export BINARY_SUFFIX="$BINARY_SUFFIX.exe"; fi
+  #          if $IS_PR ; then echo $PR_PROMPT; fi
+  #          export BINARY_NAME="$BINARY_PREFIX"$GOOS"_$GOARCH$BINARY_SUFFIX"
+  #          export CGO_ENABLED=0
+  #          go build -o "dist/$BINARY_NAME"  .
+  #          cp config.yml dist/
+  #          cp job_config.yml dist/
+  #      - name: Upload artifact
+  #        uses: actions/upload-artifact@v3
+  #        if: ${{ !github.head_ref }}
+  #        with:
+  #          name: ${{ matrix.goos }}_${{ matrix.goarch }}
+  #          path: dist/
 
   goreleaser:
     runs-on: ubuntu-latest
@@ -66,46 +66,16 @@ jobs:
           go-version: '1.19'
 
       - name: Run GoReleaser
-#        uses: goreleaser/goreleaser-action@v4
-#        with:
-#          version: latest
-#          args: release --clean
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-        before:
-          hooks:
-            # You may remove this if you don't use go modules.
-            - go mod tidy
-            # you may remove this if you don't need go generate
-            - go generate ./...
-        builds:
-          - env:
-              - CGO_ENABLED=0
-              - GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
-            goos:
-              - linux
-              - windows
-              - darwin
-        archives:
-          - replacements:
-              darwin: Darwin
-              linux: Linux
-              windows: Windows
-              386: i386
-              amd64: x86_64
-          - files:
+        uses: goreleaser/goreleaser-action@v4
+        with:
+          archives:
+            files:
               - LICENSE*
-              - README_{{.Os}}.md
+              - README.md
               - config.yml
               - job_config.yml
-        checksum:
-          name_template: 'checksums.txt'
-        snapshot:
-          name_template: "{{ incpatch .Version }}-next"
-        changelog:
-          sort: asc
-          filters:
-            exclude:
-              - '^docs:'
-              - '^test:'
+          version: latest
+          args: release --clean
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
