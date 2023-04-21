@@ -110,27 +110,5 @@ archives:
           # File mode.
           mode: 0644
 
-    # Before and after hooks for each archive.
-    # Skipped if archive format is binary.
-    # This feature is only available in GoReleaser Pro.
-    hooks:
-      before:
-        - make clean # simple string
-        - cmd: go generate ./... # specify cmd
-        - cmd: go mod tidy
-          output: true # always prints command output
-          dir: ./submodule # specify command working directory
-        - cmd: touch {{ .Env.FILE_TO_TOUCH }}
-          env:
-            - 'FILE_TO_TOUCH=something-{{ .ProjectName }}' # specify hook level environment variables
-
-      after:
-        - make clean
-        - cmd: cat *.yaml
-          dir: ./submodule
-        - cmd: touch {{ .Env.RELEASE_DONE }}
-          env:
-            - 'RELEASE_DONE=something-{{ .ProjectName }}' # specify hook level environment variables
-
     # Disables the binary count check.
     allow_different_binary_count: true
