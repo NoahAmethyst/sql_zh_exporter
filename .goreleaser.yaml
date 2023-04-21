@@ -6,6 +6,6 @@ archives:
     files:
       - LICENSE*
       - README*
-      - CHANGELOG
+      - CHANGELOG*
       - config.yml
       - job_config.yml
