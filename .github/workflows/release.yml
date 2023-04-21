@@ -56,26 +56,24 @@ jobs:
   goreleaser:
     runs-on: ubuntu-latest
     steps:
+      -
       - name: Checkout
-        run: |
-          git version
-          git clone https://github.com/NoahAmethyst/sql_zh_exporter.git /home/runner/work/sql_zh_exporter/sql_zh_exporter
-      - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/checkout@v3
         with:
-          go-version: '1.19'
+          fetch-depth: 0
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v4
         with:
-          archives:
-            files:
-              - LICENSE*
-              - README.md
-              - config.yml
-              - job_config.yml
           version: latest
-          args: release --clean
-
+          args: release --clean --config .goreleaser.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload assets
+        uses: actions/upload-artifact@v3
+        with:
+          name: sql_zh_exporter
+          path: |
+            config.yml
+            job_config.yml
