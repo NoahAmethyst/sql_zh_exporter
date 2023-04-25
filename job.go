@@ -97,7 +97,6 @@ func (j *Job) updateConnections() {
 	// parse the connection URLs and create an connection object for each
 	if len(j.conns) < len(j.Connections) {
 		for _, conn := range j.Connections {
-			// MySQL DSNs do not parse cleanly as URLs as of Go 1.12.8+
 			u, err := url.Parse(conn)
 			if err != nil {
 				log.Error().Fields(map[string]interface{}{
@@ -112,7 +111,7 @@ func (j *Job) updateConnections() {
 			if u.User != nil {
 				user = u.User.Username()
 			}
-			// we expose some of the connection variables as labels, so we need to
+			// we expose some connection variables as labels, so we need to
 			// remember them
 			newConn := &connection{
 				conn:     nil,
@@ -122,22 +121,6 @@ func (j *Job) updateConnections() {
 				database: strings.TrimPrefix(u.Path, "/"),
 				user:     user,
 			}
-			if newConn.driver == "athena" {
-				// call go-athena's Open() to ensure conn.db is set,
-				// otherwise API calls will complain about an empty database field:
-				// "InvalidParameter: 1 validation error(s) found. - minimum field size of 1, StartQueryExecutionInput.QueryExecutionContext.Database."
-				newConn.conn, err = sqlx.Open("athena", u.String())
-				if err != nil {
-					log.Error().Fields(map[string]interface{}{
-						"action":     "Failed to open Athena connection",
-						"connection": conn,
-						"job":        j.Name,
-						"error":      err,
-					}).Send()
-					continue
-				}
-			}
-
 			j.conns = append(j.conns, newConn)
 		}
 	}
