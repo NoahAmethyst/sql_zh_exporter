@@ -5,7 +5,6 @@ on:
   push:
     tags:
       - 'v*'
-      - 'test*'
 env:
   BINARY_PREFIX: "sql-zh-exporter_"
   BINARY_SUFFIX: ""
