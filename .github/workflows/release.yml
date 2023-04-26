@@ -4,7 +4,8 @@ name: Go create executable file
 on:
   push:
     tags:
-      - [ 'v*','test*' ]
+      - 'v*'
+      - 'test*'
 env:
   BINARY_PREFIX: "sql-zh-exporter_"
   BINARY_SUFFIX: ""
