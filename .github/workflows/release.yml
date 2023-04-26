@@ -64,7 +64,7 @@ jobs:
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v4
         with:
-          version: latest
+          version: 1.19
           args: |
             release --clean --config .goreleaser.yaml
         env:

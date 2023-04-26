@@ -9,3 +9,5 @@ archives:
       - CHANGELOG*
       - config.yml
       - job_config.yml
+
+builds:
