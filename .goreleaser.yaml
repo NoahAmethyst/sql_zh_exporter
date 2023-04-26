@@ -9,6 +9,8 @@ archives:
       - CHANGELOG*
       - config.yml
       - job_config.yml
+      - kingbase_job_config.yml
+      - dm_job_config.yml
 
 builds:
   -
