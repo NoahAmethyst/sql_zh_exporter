@@ -61,6 +61,7 @@ func (j *Job) Init(queries map[string]string) error {
 		}
 		// try to satisfy prometheus naming restrictions
 		name := MetricNameRE.ReplaceAllString(fmt.Sprintf("sql_%s_%s", q.jobName, q.Name), "")
+		//name := MetricNameRE.ReplaceAllString(fmt.Sprintf("%sdb_%s", q.jobName, q.Name), "")
 		//name := strings.ToLower(fmt.Sprintf("%s_%s", q.jobName, q.Name))
 		//name = MetricNameRE.ReplaceAllString(name, "")
 		help := q.Help
@@ -108,6 +109,7 @@ func (j *Job) updateConnections() {
 				continue
 			}
 			user := ""
+
 			if u.User != nil {
 				user = u.User.Username()
 			}
@@ -194,7 +196,6 @@ func (j *Job) runOnceConnection(conn *connection, done chan int) {
 		}).Send()
 		updated++
 	}
-
 }
 
 func (j *Job) markFailed(conn *connection) {

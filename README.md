@@ -7,6 +7,12 @@
 ---
 
 * 在**job_config.yml**中自定义配置数据库监测指标
+*note:需要更改*配置信息里的数据库连接信息：
+```yaml
+# config.yml 默认配置了达梦与金仓作为示例
+    connections:
+      - '{DATABASE_DSN}://{USERNAME}:{PASSWORD}!@{HOST}:{PORT}'
+```
 * 在**config.yml**中自定义端口与日志级别
 
 ```yaml
@@ -21,7 +27,7 @@ ERROR
 
 * docker运行：
 
-```
+```shell
 # 进入项目目录
 
 chmod +x gorun.sh
@@ -32,7 +38,7 @@ chmod +x gorun.sh
 
 * 直接运行（需要golang1.19依赖）
 
-```
+```shell
 # 进入项目目录
 go mod download
 go build
