@@ -57,9 +57,9 @@ jobs:
         labels:
           - "total_lock"
         values:
-          - "count"
+          - "COUNT"
         query: |
-          SELECT COUNT(*) count FROM V$LOCK;
+          SELECT COUNT(*) COUNT FROM V$LOCK;
       # 死锁数量
       - name: "dead_lock"
         help: "DM total dead lock number"
