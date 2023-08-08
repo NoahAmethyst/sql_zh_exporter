@@ -75,7 +75,6 @@ func (q *Query) Run(conn *connection) error {
 	q.Lock()
 	q.metrics[conn] = metrics
 	q.Unlock()
-
 	return nil
 }
 
