@@ -4,7 +4,7 @@ jobs:
   - name: "dm"
     interval: '5s'
     connections:
-      - 'dm://DTC_PLATFORM_CLOUD:dtc_platform_2020!@10.3.7.231:5236'
+      - 'dm://[USERNAME]:[PASSWORD]@[HOST]:[PORT]'
     queries:
       # 数据库qps
       - name: "qps"

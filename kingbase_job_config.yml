@@ -4,7 +4,7 @@ jobs:
   - name: "kingbase"
     interval: '5s'
     connections:
-      - 'kingbase://SYSTEM:123456@10.3.7.246:54321/TEST?sslmode=disable'
+      - 'kingbase://[USERNAME]:[PASSWORD]@[HOST]:[PORT]/[DBNAME]?sslmode=disable'
     queries:
       # 数据库最大连接数
       - name: "max_conn"
