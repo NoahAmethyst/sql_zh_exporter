@@ -243,6 +243,10 @@ func (j *Job) runOnce() error {
 func (c *connection) connect(job *Job) error {
 	// already connected
 	if c.conn != nil {
+		err := c.conn.Ping()
+		if err != nil {
+			job.clearmetrics()
+		}
 		return nil
 	}
 	dsn := c.url
@@ -278,4 +282,18 @@ func (c *connection) connect(job *Job) error {
 
 	c.conn = conn
 	return nil
+}
+
+func (j *Job) clearmetrics() {
+	for qi, query := range j.Queries {
+		if query == nil {
+			continue
+		}
+		for mi, metrics := range query.metrics {
+			if metrics != nil {
+				j.Queries[qi].metrics[mi] = nil
+			}
+		}
+
+	}
 }
